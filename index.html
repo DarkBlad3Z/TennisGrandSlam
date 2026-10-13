@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Grand Slam Tracker</title>
+<meta name="description" content="Men's singles Grand Slam finals, 2003 onwards: champions grid, finals leaderboard and titles by year.">
+<meta name="theme-color" content="#1f6f3f">
+<meta name="color-scheme" content="light">
+<!-- installable on a phone home screen -->
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/favicon.svg" type="image/svg+xml">
+<link rel="alternate icon" href="icons/favicon.ico" sizes="any">
+<link rel="icon" href="icons/icon-192.png" sizes="192x192" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Slams">
+<meta name="mobile-web-app-capable" content="yes">
+<style>
+:root{
+  color-scheme: light;
+  --bg:#f7f7f5; --card:#ffffff; --ink:#1a1a1a; --ink2:#5c5c57; --ink3:#8a8a84;
+  --line:#e3e3df; --line2:#d0d0ca; --accent:#1f6f3f; --accent-soft:#e8f3ec;
+  --warn:#9a4a1a; --warn-soft:#fdf0e6;
+  --radius:10px;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--ink); font-family:var(--sans);
+  font-size:15px; line-height:1.45; -webkit-text-size-adjust:100%;
+}
+.wrap{max-width:1180px;margin:0 auto;padding:16px 14px 60px}
+
+/* ---------- header ---------- */
+header.top{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px;margin-bottom:4px}
+header.top h1{font-size:21px;margin:0;letter-spacing:-.01em;font-weight:650}
+header.top .sub{color:var(--ink3);font-size:13px}
+nav.tabs{display:flex;gap:4px;margin:14px 0 16px;background:#ececE8;padding:3px;border-radius:9px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+nav.tabs button{
+  flex:1 0 auto;appearance:none;border:0;background:transparent;color:var(--ink2);
+  font:inherit;font-size:13.5px;font-weight:550;padding:7px 14px;border-radius:7px;cursor:pointer;white-space:nowrap
+}
+nav.tabs button[aria-selected="true"]{background:var(--card);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+section[hidden]{display:none!important}
+
+/* ---------- generic ---------- */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);margin-bottom:14px}
+.card > h2{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);
+  margin:0;padding:12px 14px 10px;font-weight:650}
+.card .body{padding:0 14px 14px}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+button.btn,select,input[type=text],input[type=number]{
+  font:inherit;font-size:14px;color:var(--ink);background:var(--card);
+  border:1px solid var(--line2);border-radius:7px;padding:7px 10px;
+}
+button.btn{cursor:pointer;font-weight:550}
+button.btn:hover{background:#f2f2ef}
+button.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+button.btn.primary:hover{filter:brightness(1.08)}
+button.btn.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+button.btn.danger{color:#8a1f1f;border-color:#e0bcbc}
+label.lbl{font-size:12.5px;color:var(--ink3);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.muted{color:var(--ink3);font-size:13px}
+.note{background:var(--warn-soft);border:1px solid #f0d9c2;color:#6b3b14;
+  border-radius:8px;padding:10px 12px;font-size:13.5px;line-height:1.5;margin-bottom:14px}
+.note b{font-weight:650}
+.hint{font-size:12.5px;color:var(--ink3);margin-top:8px;line-height:1.5}
+
+/* ---------- desktop matrix ---------- */
+.scroller{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);border-radius:8px;background:var(--card)}
+table.matrix{border-collapse:separate;border-spacing:0;font-size:12.5px;width:max-content;min-width:100%}
+table.matrix th,table.matrix td{border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:0}
+table.matrix thead th{
+  position:sticky;top:0;z-index:3;background:#efefec;color:var(--ink2);
+  font-weight:650;font-size:12px;padding:7px 4px;text-align:center;min-width:92px
+}
+table.matrix th.rowhead{
+  position:sticky;left:0;z-index:2;background:#efefec;color:var(--ink2);text-align:left;
+  padding:7px 10px;font-weight:650;font-size:12px;min-width:116px;white-space:nowrap;
+  border-right:1px solid var(--line2)
+}
+table.matrix thead th:first-child{z-index:4;left:0}
+td.cell{vertical-align:top}
+td.cell .in{display:block;padding:6px 7px;min-height:44px;cursor:default}
+body.editing td.cell .in{cursor:pointer}
+body.editing td.cell:hover .in{outline:2px solid var(--accent);outline-offset:-2px}
+.champ{font-weight:650;display:block;line-height:1.25}
+.ru{display:block;font-size:11.5px;opacity:.78;line-height:1.25;margin-top:1px}
+.score{display:block;font-size:10.5px;opacity:.62;font-family:var(--mono);margin-top:2px}
+td.cancelled .in{background:repeating-linear-gradient(45deg,#2b2b2b,#2b2b2b 6px,#3c3c3c 6px,#3c3c3c 12px);color:#fff}
+td.cancelled .champ{font-weight:600;font-size:11px}
+td.empty .in{background:#fafaf8}
+td.empty .champ{color:var(--ink3);font-weight:500;font-style:italic;font-size:11.5px}
+tr.dim td.cell .in{opacity:.17}
+
+/* ---------- mobile year cards ---------- */
+.years{display:grid;gap:10px}
+.yearcard{border:1px solid var(--line);border-radius:9px;background:var(--card);overflow:hidden}
+.yearcard > .yr{display:flex;justify-content:space-between;align-items:center;
+  background:#efefec;padding:7px 11px;font-weight:700;font-size:14px;border-bottom:1px solid var(--line)}
+.yearcard > .yr .tag{font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em}
+.yearcard .slamrow{display:flex;align-items:stretch;border-bottom:1px solid var(--line)}
+.yearcard .slamrow:last-child{border-bottom:0}
+.yearcard .slamrow .nm{flex:0 0 86px;padding:8px 10px;font-size:11.5px;font-weight:650;
+  color:var(--ink2);background:#f8f8f6;display:flex;align-items:center;border-right:1px solid var(--line)}
+.yearcard .slamrow .val{flex:1 1 auto;padding:7px 10px;min-width:0}
+body.editing .yearcard .slamrow .val{cursor:pointer}
+
+/* ---------- leaderboard ---------- */
+table.board{width:100%;border-collapse:collapse;font-size:14px}
+table.board th{text-align:left;font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;
+  color:var(--ink3);font-weight:650;padding:7px 8px;border-bottom:1px solid var(--line2);white-space:nowrap}
+table.board th.num,table.board td.num{text-align:right;font-variant-numeric:tabular-nums;font-family:var(--mono)}
+table.board th.srt{cursor:pointer;user-select:none}
+table.board th.srt:hover{color:var(--ink)}
+table.board td{padding:7px 8px;border-bottom:1px solid var(--line)}
+table.board tbody tr:hover{background:#faf9f6}
+.sw{display:inline-block;width:11px;height:11px;border-radius:3px;border:1px solid rgba(0,0,0,.18);
+  margin-right:7px;vertical-align:-1px;flex:0 0 auto}
+td.pl{font-weight:600;white-space:nowrap}
+.pill{display:inline-block;font-size:10.5px;font-weight:650;padding:1px 6px;border-radius:20px;
+  background:#eeeeea;color:var(--ink3);margin-left:6px;vertical-align:1px;white-space:nowrap}
+.pill.ret{background:#f0ecf5;color:#5b4a73}
+.pill.act{background:var(--accent-soft);color:var(--accent)}
+.bar{height:5px;border-radius:3px;background:var(--accent);display:block;min-width:2px}
+.barwrap{min-width:60px}
+
+/* ---------- finals-per-year strip ---------- */
+.strip{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table.strip-t{border-collapse:collapse;font-size:11px;font-family:var(--mono);width:max-content;min-width:100%}
+table.strip-t th,table.strip-t td{padding:4px 5px;border:1px solid var(--line);text-align:center;white-space:nowrap}
+table.strip-t th.rh{text-align:left;font-family:var(--sans);font-weight:650;font-size:11.5px;
+  position:sticky;left:0;background:#efefec;min-width:84px}
+table.strip-t thead th{background:#efefec;font-family:var(--sans);font-weight:650;font-size:11px}
+table.strip-t td.z{color:#c9c9c3}
+table.strip-t td.pf{font-weight:700}
+
+/* ---------- dialog ---------- */
+dialog#ed{border:0;border-radius:12px;padding:0;width:min(420px,calc(100vw - 24px));
+  box-shadow:0 18px 50px rgba(0,0,0,.26);background:var(--card);color:var(--ink)}
+dialog#ed::backdrop{background:rgba(20,20,18,.42)}
+dialog#ed .dh{padding:14px 16px 10px;border-bottom:1px solid var(--line)}
+dialog#ed .dh strong{display:block;font-size:16px}
+dialog#ed .dh span{font-size:12.5px;color:var(--ink3)}
+dialog#ed .db{padding:14px 16px}
+dialog#ed .fld{margin-bottom:12px}
+dialog#ed .fld label{display:block;font-size:11.5px;font-weight:650;text-transform:uppercase;
+  letter-spacing:.05em;color:var(--ink3);margin-bottom:4px}
+dialog#ed input[type=text]{width:100%}
+dialog#ed .chk{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--ink2)}
+dialog#ed .df{display:flex;gap:8px;justify-content:flex-end;padding:0 16px 16px;flex-wrap:wrap}
+dialog#ed .df .sp{margin-right:auto}
+
+textarea.io{width:100%;min-height:120px;font-family:var(--mono);font-size:11.5px;
+  border:1px solid var(--line2);border-radius:7px;padding:9px;resize:vertical;color:var(--ink);background:#fcfcfa}
+ul.notes{margin:0;padding-left:20px;font-size:13.5px;color:var(--ink2);line-height:1.6}
+ul.notes li{margin-bottom:5px}
+ul.chg{margin:0;padding-left:20px;font-size:13.5px;line-height:1.6}
+ul.chg li{margin-bottom:6px}
+ul.chg code{font-family:var(--mono);font-size:12px;background:#f0f0ec;padding:1px 4px;border-radius:4px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:9px;margin-bottom:14px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:9px;padding:9px 11px}
+.kpi .k{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);font-weight:650}
+.kpi .v{font-size:20px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.kpi .v small{font-size:12px;font-weight:600;color:var(--ink3)}
+
+/* layout is chosen explicitly (JS sets the body class), not guessed from width */
+#matrixHost,#yearsHost{display:none}
+body.lay-grid  #matrixHost{display:block}
+body.lay-cards #yearsHost {display:grid;gap:10px}
+@media (max-width:760px){
+  .wrap{padding:12px 10px 60px}
+  header.top h1{font-size:19px}
+  body{font-size:14.5px}
+}
+@media print{nav.tabs,.toolbar,button.btn{display:none}section[hidden]{display:block!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <h1>Grand Slam Tracker</h1>
+  <span class="sub">Men's singles finals &middot; <span id="rangeLbl">2003&ndash;2026</span></span>
+</header>
+
+<nav class="tabs" role="tablist">
+  <button role="tab" aria-selected="true"  data-v="grid">Champions grid</button>
+  <button role="tab" aria-selected="false" data-v="board">Leaderboard</button>
+  <button role="tab" aria-selected="false" data-v="data">Notes &amp; data</button>
+</nav>
+
+<!-- ============ GRID ============ -->
+<section id="v-grid">
+  <div class="toolbar">
+    <label class="lbl" for="hl">Highlight</label>
+    <select id="hl"><option value="">Everyone</option></select>
+    <button class="btn" id="tglLayout" type="button">Grid</button>
+    <button class="btn" id="tglScore" type="button">Scores</button>
+    <button class="btn" id="tglEdit" type="button">Edit</button>
+    <button class="btn" id="addYear" type="button" hidden>+ Year</button>
+  </div>
+  <div class="kpis" id="kpis"></div>
+  <div class="scroller" id="matrixHost"></div>
+  <div class="years" id="yearsHost"></div>
+  <p class="hint" id="editHint" hidden>Edit mode on &mdash; tap any final to change the champion, runner-up or score. Changes save on this device automatically.</p>
+</section>
+
+<!-- ============ BOARD ============ -->
+<section id="v-board" hidden>
+  <div class="card">
+    <h2>Finals record</h2>
+    <div class="body">
+      <div class="toolbar">
+        <label class="lbl" for="minF">Min. finals</label>
+        <select id="minF">
+          <option value="1">1+</option>
+          <option value="2">2+</option>
+          <option value="3" selected>3+</option>
+          <option value="5">5+</option>
+        </select>
+        <span class="muted" id="boardCount"></span>
+      </div>
+      <div class="scroller" style="border:0"><table class="board" id="board"></table></div>
+      <p class="hint">Counts cover the years in this tracker only, not full careers. Sort by tapping a column heading.</p>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Won / reached, by year</h2>
+    <div class="body">
+      <div class="strip" id="stripHost"></div>
+      <p class="hint">Read <code>2/4</code> as &ldquo;won 2 of the 4 finals reached&rdquo;. Blank years mean no final reached. Shows every player with 3+ finals.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ DATA ============ -->
+<section id="v-data" hidden>
+  <div class="card">
+    <h2>Corrections applied to the original sheet</h2>
+    <div class="body"><ul class="chg" id="chgList"></ul></div>
+  </div>
+  <div class="card">
+    <h2>Tournament notes</h2>
+    <div class="body"><ul class="notes" id="noteList"></ul></div>
+  </div>
+  <div class="card">
+    <h2>Back up &amp; move your data</h2>
+    <div class="body">
+      <p class="muted" style="margin-top:0">Edits are stored in this browser only, so your phone and laptop keep separate copies. To move your changes across, copy the text below and paste it into the other device.</p>
+      <div class="toolbar">
+        <button class="btn" id="doExport" type="button">Show my data</button>
+        <button class="btn primary" id="doImport" type="button">Load pasted data</button>
+        <button class="btn danger" id="doReset" type="button">Reset to verified data</button>
+      </div>
+      <textarea class="io" id="io" placeholder="Your data appears here when you tap &ldquo;Show my data&rdquo;. To load, paste here and tap &ldquo;Load pasted data&rdquo;."></textarea>
+      <p class="hint" id="ioMsg"></p>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<dialog id="ed">
+  <form method="dialog">
+    <div class="dh"><strong id="edT">Final</strong><span id="edS"></span></div>
+    <div class="db">
+      <div class="fld"><label for="edC">Champion</label><input type="text" id="edC" list="plList" autocomplete="off" autocapitalize="words" spellcheck="false"></div>
+      <div class="fld"><label for="edR">Runner-up</label><input type="text" id="edR" list="plList" autocomplete="off" autocapitalize="words" spellcheck="false"></div>
+      <div class="fld"><label for="edSc">Score <span style="font-weight:500;text-transform:none;letter-spacing:0">(optional)</span></label><input type="text" id="edSc" placeholder="6-3 6-4 7-6(2)" autocomplete="off" spellcheck="false"></div>
+      <div class="fld"><label class="chk"><input type="checkbox" id="edX"> Not played / cancelled</label></div>
+    </div>
+    <div class="df">
+      <button class="btn danger sp" value="clear" type="submit">Clear</button>
+      <button class="btn" value="cancel" type="submit">Cancel</button>
+      <button class="btn primary" value="save" type="submit">Save</button>
+    </div>
+  </form>
+  <datalist id="plList"></datalist>
+</dialog>
+
+<script>
+"use strict";
+/* ============================================================
+   DATA — verified against Wikipedia tournament champion lists,
+   the Australian Open honour roll, the Roland-Garros palmares,
+   and per-player Grand Slam finals tables. See "Corrections".
+   Format per year, starting 2003: "Champion|Runner-up|Score"
+   "" = not yet played/recorded, "X" = cancelled.
+   ============================================================ */
+var START = 2003;
+var SLAMS = ["Australian Open","French Open","Wimbledon","US Open"];
+var SHORT = {"Australian Open":"Australian","French Open":"French","Wimbledon":"Wimbledon","US Open":"US Open"};
+
+var SEED = {
+"Australian Open":[
+"Agassi|Schuettler","Federer|Safin","Safin|Hewitt","Federer|Baghdatis","Federer|Gonzalez",
+"Djokovic|Tsonga","Nadal|Federer","Federer|Murray","Djokovic|Murray","Djokovic|Nadal",
+"Djokovic|Murray","Wawrinka|Nadal","Djokovic|Murray","Djokovic|Murray","Federer|Nadal",
+"Federer|Cilic","Djokovic|Nadal","Djokovic|Thiem","Djokovic|Medvedev","Nadal|Medvedev",
+"Djokovic|Tsitsipas","Sinner|Medvedev","Sinner|Zverev","Alcaraz|Djokovic|2-6 6-2 6-3 7-5"],
+"French Open":[
+"Ferrero|Verkerk","Gaudio|Coria","Nadal|Puerta","Nadal|Federer","Nadal|Federer",
+"Nadal|Federer","Federer|Soderling","Nadal|Soderling","Nadal|Federer","Nadal|Djokovic",
+"Nadal|Ferrer","Nadal|Djokovic","Wawrinka|Djokovic","Djokovic|Murray","Nadal|Wawrinka",
+"Nadal|Thiem","Nadal|Thiem","Nadal|Djokovic","Djokovic|Tsitsipas","Nadal|Ruud",
+"Djokovic|Ruud","Alcaraz|Zverev","Alcaraz|Sinner","Zverev|Cobolli|6-1 4-6 6-4 6-7(5) 6-1"],
+"Wimbledon":[
+"Federer|Philippoussis","Federer|Roddick","Federer|Roddick","Federer|Nadal","Federer|Nadal",
+"Nadal|Federer","Federer|Roddick","Nadal|Berdych","Djokovic|Nadal","Federer|Murray",
+"Murray|Djokovic","Djokovic|Federer","Djokovic|Federer","Murray|Raonic","Federer|Cilic",
+"Djokovic|Anderson","Djokovic|Federer","X","Djokovic|Berrettini","Djokovic|Kyrgios",
+"Alcaraz|Djokovic","Alcaraz|Djokovic","Sinner|Alcaraz","Sinner|Zverev|6-7(7) 7-6(2) 6-3 6-4"],
+"US Open":[
+"Roddick|Ferrero","Federer|Hewitt","Federer|Agassi","Federer|Roddick","Federer|Djokovic",
+"Federer|Murray","Del Potro|Federer","Nadal|Djokovic","Djokovic|Nadal","Murray|Djokovic",
+"Nadal|Djokovic","Cilic|Nishikori","Djokovic|Federer","Wawrinka|Djokovic","Nadal|Anderson|6-3 6-3 6-4",
+"Djokovic|Del Potro","Nadal|Medvedev","Thiem|Zverev","Medvedev|Djokovic","Alcaraz|Ruud",
+"Djokovic|Medvedev","Sinner|Fritz","Alcaraz|Sinner","Zverev|Shelton|6-3 7-6(2) 5-7 6-2"]
+};
+
+/* Colours lifted from the original spreadsheet fills (theme colours resolved). */
+var COLORS = {
+  "Djokovic":"#99CC00","Nadal":"#FFCC00","Federer":"#FF99CC","Murray":"#CCFFFF",
+  "Alcaraz":"#FF0000","Sinner":"#93CDDD","Medvedev":"#9278C3","Roddick":"#A6A6A6",
+  "Wawrinka":"#4BACC6","Thiem":"#F2DCDB","Ruud":"#EBF1DE","Zverev":"#FAC090",
+  "Tsitsipas":"#DCE6F1","Fritz":"#E5E0EC","Cobolli":"#D6E4BC","Cilic":"#F6C9C7",
+  "Shelton":"#C6D9F0","Anderson":"#EDEDE6","Del Potro":"#D9D2E9","Hewitt":"#EFEFE8",
+  "Soderling":"#E2EFDA","Safin":"#E8E4D9","Agassi":"#F2E6D9","Ferrero":"#EAE6F0",
+  "Gaudio":"#DDE8CF"
+};
+
+/* Retirement / status — carried over from the sheet, with one correction. */
+var STATUS = {
+  "Federer":{s:"R",d:"Sep 2022"},   "Nadal":{s:"R",d:"Nov 2024"},
+  "Murray":{s:"R",d:"Aug 2024"},    "Roddick":{s:"R",d:"Aug 2012"},
+  "Thiem":{s:"R",d:"Sep 2024"},     "Wawrinka":{s:"F",d:"farewell season"},
+  "Agassi":{s:"R",d:"Sep 2006"},    "Safin":{s:"R",d:"Nov 2009"},
+  "Hewitt":{s:"R",d:"Jan 2016"},    "Ferrero":{s:"R",d:"Oct 2012"},
+  "Soderling":{s:"R",d:"2015"},     "Del Potro":{s:"R",d:"Feb 2022"},
+  "Philippoussis":{s:"R",d:"2015"}, "Schuettler":{s:"R",d:"2013"},
+  "Gaudio":{s:"R",d:"2011"},        "Coria":{s:"R",d:"2009"},
+  "Puerta":{s:"R",d:"2012"},        "Verkerk":{s:"R",d:"2009"},
+  "Gonzalez":{s:"R",d:"2012"},      "Baghdatis":{s:"R",d:"Jul 2019"},
+  "Berdych":{s:"R",d:"Jan 2019"},   "Nishikori":{s:"A",d:""},
+  "Tsonga":{s:"R",d:"May 2022"},    "Ferrer":{s:"R",d:"May 2019"},
+  "Raonic":{s:"R",d:"2024"},        "Anderson":{s:"R",d:"May 2022"},
+  "Cilic":{s:"A",d:""}
+};
+
+var NOTES = [
+  "2014 US Open: Nishikori d. Djokovic in the semi-final and Cilic d. Federer in the other semi; Nadal did not play.",
+  "2020 US Open: Djokovic was defaulted in the fourth round after hitting a line judge; Federer (knee surgery) and Nadal (Covid concerns) did not play.",
+  "2020 Wimbledon was cancelled because of Covid-19 — the only major not played that year.",
+  "2021 US Open: Djokovic reached the final; Berrettini d. Federer and Tsitsipas d. Nadal earlier in the draw.",
+  "2026 Wimbledon: Alcaraz did not play, so Sinner defended the title against Zverev.",
+  "2026 US Open: Shelton d. defending champion Alcaraz in the quarter-finals before losing the final to Zverev."
+];
+
+var CHANGES = [
+  "<b>2017 US Open runner-up corrected.</b> The sheet had <code>Nadal d. Del Potro</code>; the final was <code>Nadal d. Anderson</code> 6-3 6-3 6-4. Del Potro lost to Nadal in the semi-final. (He genuinely was the 2018 US Open runner-up, which the sheet had right.)",
+  "<b>2026 Wimbledon added.</b> <code>Sinner d. Zverev</code> 6-7(7) 7-6(2) 6-3 6-4 — missing from the sheet.",
+  "<b>2026 US Open added.</b> <code>Zverev d. Shelton</code> 6-3 7-6(2) 5-7 6-2 — missing from the sheet.",
+  "<b>2013 French Open runner-up reconciled.</b> Your two copies of the grid disagreed: the upper block said <code>d. Ferrer</code> and the lower said <code>d. Federer</code>. Ferrer is correct.",
+  "<b>Federer's 2004 count fixed.</b> The &ldquo;in finals&rdquo; row read <code>2/3</code>; he won all three finals he reached that year (Australian, Wimbledon, US Open), so <code>3/3</code>.",
+  "<b>Djokovic's 2007 and 2025 counts fixed.</b> 2007 showed <code>0</code> but he was US Open runner-up, so <code>0/1</code>. 2025 showed <code>1/1</code> but he reached no final that year. These rows are now calculated from the grid, so they can't drift again.",
+  "<b>Tally updated.</b> Adding the two 2026 majors moves Sinner to 5 wins (from 4) and Zverev to 2 (from 1). Every other line in your tally was already correct.",
+  "<b>Wawrinka's status changed from retired.</b> The sheet dated his retirement Jan 2026; he announced 2026 as his final season and has said he plans to finish at Basel, so he is shown as still playing.",
+  "<b>Spellings.</b> Schuttler → Schuettler, Neishikori → Nishikori, Warwinka → Wawrinka, Rudd → Ruud, Philippous → Philippoussis."
+];
+
+/* ============================================================
+   STATE
+   ============================================================ */
+var KEY = "slamtracker.v1";
+var data = null, endYear = 2026;
+
+function buildSeed(){
+  var out = {};
+  SLAMS.forEach(function(s){
+    out[s] = {};
+    SEED[s].forEach(function(raw,i){
+      var y = START + i;
+      if(raw === "X"){ out[s][y] = {x:true}; return; }
+      if(!raw){ return; }
+      var p = raw.split("|");
+      out[s][y] = {c:p[0], r:p[1]||"", sc:p[2]||""};
+    });
+  });
+  return out;
+}
+function lastYear(d){
+  var mx = START;
+  SLAMS.forEach(function(s){
+    Object.keys(d[s]||{}).forEach(function(y){ y=+y; if(y>mx) mx=y; });
+  });
+  return Math.max(mx, 2026);
+}
+function load(){
+  try{
+    var raw = localStorage.getItem(KEY);
+    if(raw){
+      var o = JSON.parse(raw);
+      if(o && o.data && o.v === 1){ data = o.data; endYear = o.endYear || lastYear(data); return; }
+    }
+  }catch(e){ console.warn("load failed", e); }
+  data = buildSeed(); endYear = lastYear(data);
+}
+function save(){
+  try{ localStorage.setItem(KEY, JSON.stringify({v:1, data:data, endYear:endYear})); }
+  catch(e){ console.warn("save failed (storage unavailable) — changes last for this visit only", e); }
+}
+function years(){ var a=[]; for(var y=START;y<=endYear;y++) a.push(y); return a; }
+
+/* ============================================================
+   DERIVED
+   ============================================================ */
+function allPlayers(){
+  var set = {};
+  SLAMS.forEach(function(s){ years().forEach(function(y){
+    var f = data[s][y]; if(!f||f.x) return;
+    if(f.c) set[f.c]=1; if(f.r) set[f.r]=1;
+  });});
+  return Object.keys(set).sort();
+}
+function tally(){
+  var m = {};
+  function get(p){ if(!m[p]) m[p]={p:p,w:0,l:0}; return m[p]; }
+  SLAMS.forEach(function(s){ years().forEach(function(y){
+    var f = data[s][y]; if(!f||f.x) return;
+    if(f.c) get(f.c).w++;
+    if(f.r) get(f.r).l++;
+  });});
+  return Object.keys(m).map(function(k){
+    var r=m[k]; r.f=r.w+r.l; r.pct = r.f ? r.w/r.f : 0; return r;
+  });
+}
+function perYear(p){
+  return years().map(function(y){
+    var w=0,f=0;
+    SLAMS.forEach(function(s){
+      var x = data[s][y]; if(!x||x.x) return;
+      if(x.c===p){ w++; f++; } else if(x.r===p){ f++; }
+    });
+    return {y:y,w:w,f:f};
+  });
+}
+function colorOf(p){ return COLORS[p] || "#EFEFE9"; }
+function inkOn(hex){
+  var h = (hex||"").replace("#","");
+  if(h.length!==6) return "#1a1a1a";
+  var r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),b=parseInt(h.slice(4,6),16);
+  return (0.299*r + 0.587*g + 0.114*b) > 150 ? "#1a1a1a" : "#ffffff";
+}
+function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g, function(c){
+  return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+
+/* ============================================================
+   RENDER — grid
+   ============================================================ */
+var showScores = false, editing = false, highlight = "";
+
+/* ---- layout: "auto" | "grid" | "cards" -------------------------------
+   auto  = decided by the device, and re-decided on resize / rotate
+   grid  = the wide year-by-year matrix (your spreadsheet layout)
+   cards = one card per year, for narrow screens
+   The button cycles auto -> grid -> cards -> auto. Choice is remembered. */
+var LKEY = "slamtracker.layout";
+var layoutMode = "auto";
+var CARD_MAX = 720;              // px: at or below this, auto picks cards
+var mq = null;
+
+function autoPick(){ return (window.innerWidth <= CARD_MAX) ? "cards" : "grid"; }
+function effectiveLayout(){ return layoutMode === "auto" ? autoPick() : layoutMode; }
+
+function initLayout(){
+  var saved = null;
+  try{ saved = localStorage.getItem(LKEY); }catch(e){}
+  layoutMode = (saved === "grid" || saved === "cards" || saved === "auto") ? saved : "auto";
+
+  // re-evaluate on rotate / window resize, but only while in auto
+  if(window.matchMedia){
+    mq = window.matchMedia("(max-width:" + CARD_MAX + "px)");
+    var onChange = function(){ if(layoutMode === "auto") applyLayout(); };
+    if(mq.addEventListener) mq.addEventListener("change", onChange);
+    else if(mq.addListener) mq.addListener(onChange);          // older Safari
+  }
+  window.addEventListener("orientationchange", function(){
+    if(layoutMode === "auto") setTimeout(applyLayout, 150);
+  });
+  applyLayout();
+}
+function cycleLayout(){
+  layoutMode = layoutMode === "auto" ? "grid" : layoutMode === "grid" ? "cards" : "auto";
+  try{ localStorage.setItem(LKEY, layoutMode); }catch(e){}
+  applyLayout();
+}
+function applyLayout(){
+  var eff = effectiveLayout();
+  document.body.classList.toggle("lay-grid",  eff === "grid");
+  document.body.classList.toggle("lay-cards", eff === "cards");
+  var b = document.getElementById("tglLayout");
+  if(layoutMode === "auto"){
+    b.textContent = "Auto";
+    b.title = "Layout follows your screen (now: " + eff + "). Tap to force the grid.";
+    b.classList.remove("on");
+  } else {
+    b.textContent = layoutMode === "grid" ? "Grid" : "Cards";
+    b.title = layoutMode === "grid"
+      ? "Forced to the grid. Tap for cards."
+      : "Forced to cards. Tap to go back to automatic.";
+    b.classList.add("on");
+  }
+}
+
+function cellHTML(f, s, y){
+  var cls="cell", inner, style="";
+  if(!f){
+    cls+=" empty";
+    inner='<span class="champ">'+(y>2026?"to come":"not recorded")+'</span>';
+  } else if(f.x){
+    cls+=" cancelled";
+    inner='<span class="champ">cancelled</span>';
+  } else {
+    var col = colorOf(f.c);
+    style=' style="background:'+col+';color:'+inkOn(col)+'"';
+    inner='<span class="champ">'+esc(f.c)+'</span>'
+        + (f.r?'<span class="ru">d. '+esc(f.r)+'</span>':'')
+        + (showScores&&f.sc?'<span class="score">'+esc(f.sc)+'</span>':'');
+  }
+  return '<td class="'+cls+'" data-s="'+esc(s)+'" data-y="'+y+'"><span class="in"'+style+'>'+inner+'</span></td>';
+}
+function dimRow(f){
+  if(!highlight) return false;
+  if(!f || f.x) return true;
+  return f.c!==highlight && f.r!==highlight;
+}
+function renderMatrix(){
+  var ys = years();
+  var h = '<table class="matrix"><thead><tr><th class="rowhead">Tournament</th>';
+  ys.forEach(function(y){ h+='<th>'+y+'</th>'; });
+  h+='</tr></thead><tbody>';
+  SLAMS.forEach(function(s){
+    h+='<tr><th class="rowhead">'+esc(s)+'</th>';
+    ys.forEach(function(y){
+      var f = data[s][y];
+      var td = cellHTML(f,s,y);
+      if(dimRow(f)) td = td.replace('class="cell','class="cell dimcell');
+      h+=td;
+    });
+    h+='</tr>';
+  });
+  h+='</tbody></table>';
+  document.getElementById("matrixHost").innerHTML = h;
+  // apply dimming
+  var nodes = document.querySelectorAll("#matrixHost td.dimcell .in");
+  for(var i=0;i<nodes.length;i++) nodes[i].style.opacity=".16";
+}
+function renderYears(){
+  var host = document.getElementById("yearsHost"), h="";
+  years().slice().reverse().forEach(function(y){
+    var won = {};
+    SLAMS.forEach(function(s){ var f=data[s][y]; if(f&&!f.x&&f.c) won[f.c]=(won[f.c]||0)+1; });
+    var tag = Object.keys(won).sort(function(a,b){return won[b]-won[a];}).slice(0,1)
+                .map(function(p){ return won[p]>1 ? esc(p)+" ×"+won[p] : ""; }).join("");
+    h+='<div class="yearcard"><div class="yr"><span>'+y+'</span><span class="tag">'+tag+'</span></div>';
+    SLAMS.forEach(function(s){
+      var f = data[s][y], body, style="";
+      if(!f){ body='<span class="champ" style="color:#8a8a84;font-style:italic;font-weight:500;font-size:12px">'+(y>2026?"to come":"not recorded")+'</span>'; }
+      else if(f.x){ body='<span class="champ" style="font-size:12px">cancelled</span>'; style=' style="background:#2b2b2b;color:#fff"'; }
+      else {
+        var col=colorOf(f.c);
+        style=' style="background:'+col+';color:'+inkOn(col)+'"';
+        body='<span class="champ">'+esc(f.c)+'</span>'
+           + (f.r?'<span class="ru">d. '+esc(f.r)+'</span>':'')
+           + (showScores&&f.sc?'<span class="score">'+esc(f.sc)+'</span>':'');
+      }
+      var dim = dimRow(f) ? 'opacity:.3;' : '';
+      h+='<div class="slamrow"><div class="nm">'+esc(SHORT[s])+'</div>'
+       + '<div class="val" data-s="'+esc(s)+'" data-y="'+y+'"'
+       + (style?style.replace('style="','style="'+dim):' style="'+dim+'"')+'>'+body+'</div></div>';
+    });
+    h+='</div>';
+  });
+  host.innerHTML = h;
+}
+function renderKPIs(){
+  var t = tally().sort(function(a,b){ return b.w-a.w || b.f-a.f; });
+  var played=0, cx=0;
+  SLAMS.forEach(function(s){ years().forEach(function(y){
+    var f=data[s][y]; if(!f) return; if(f.x){cx++;} else if(f.c){played++;}
+  });});
+  var top = t[0] || {p:"—",w:0};
+  var champs = t.filter(function(r){ return r.w>0; }).length;
+  document.getElementById("kpis").innerHTML =
+    kpi("Finals logged", played) +
+    kpi("Different champions", champs) +
+    kpi("Most titles", top.w + ' <small>' + esc(top.p) + '</small>') +
+    kpi("Not played", cx);
+}
+function kpi(k,v){ return '<div class="kpi"><div class="k">'+k+'</div><div class="v">'+v+'</div></div>'; }
+
+/* ============================================================
+   RENDER — leaderboard
+   ============================================================ */
+var sortKey="w", sortDir=-1;
+function renderBoard(){
+  var min = +document.getElementById("minF").value;
+  var rows = tally().filter(function(r){ return r.f>=min; });
+  rows.sort(function(a,b){
+    var d = (a[sortKey]<b[sortKey]?-1:a[sortKey]>b[sortKey]?1:0)*sortDir;
+    return d || (b.w-a.w) || (a.p<b.p?-1:1);
+  });
+  var maxF = rows.reduce(function(m,r){ return Math.max(m,r.f); },1);
+  var h = '<thead><tr>'
+    + th("p","Player","")
+    + th("w","Titles","num")
+    + th("l","Lost","num")
+    + th("f","Finals","num")
+    + th("pct","Win %","num")
+    + '<th class="barwrap"></th></tr></thead><tbody>';
+  rows.forEach(function(r){
+    var st = STATUS[r.p];
+    var pill = "";
+    if(st && st.s==="R") pill = '<span class="pill ret">retired '+esc(st.d)+'</span>';
+    else if(st && st.s==="F") pill = '<span class="pill ret">'+esc(st.d)+'</span>';
+    h += '<tr><td class="pl"><span class="sw" style="background:'+colorOf(r.p)+'"></span>'
+       + esc(r.p) + pill + '</td>'
+       + '<td class="num">'+r.w+'</td><td class="num">'+r.l+'</td><td class="num">'+r.f+'</td>'
+       + '<td class="num">'+(r.f?Math.round(r.pct*100)+'%':'—')+'</td>'
+       + '<td class="barwrap"><span class="bar" style="width:'+Math.round(r.f/maxF*100)+'%;background:'
+       + colorOf(r.p)+';border:1px solid rgba(0,0,0,.14)"></span></td></tr>';
+  });
+  h+='</tbody>';
+  document.getElementById("board").innerHTML = h;
+  document.getElementById("boardCount").textContent = rows.length + " players";
+  var ths = document.querySelectorAll("#board th.srt");
+  for(var i=0;i<ths.length;i++){
+    ths[i].onclick = function(){
+      var k = this.getAttribute("data-k");
+      if(k===sortKey) sortDir = -sortDir; else { sortKey=k; sortDir = (k==="p"?1:-1); }
+      renderBoard();
+    };
+  }
+}
+function th(k,lbl,cls){
+  var arrow = (k===sortKey) ? (sortDir<0?" ▾":" ▴") : "";
+  return '<th class="srt '+cls+'" data-k="'+k+'">'+lbl+arrow+'</th>';
+}
+function renderStrip(){
+  var ys = years();
+  var ps = tally().filter(function(r){ return r.f>=3; })
+                  .sort(function(a,b){ return b.w-a.w || b.f-a.f || (a.p<b.p?-1:1); });
+  var h = '<table class="strip-t"><thead><tr><th class="rh">Player</th>';
+  ys.forEach(function(y){ h+='<th>'+String(y).slice(2)+'</th>'; });
+  h+='</tr></thead><tbody>';
+  ps.forEach(function(r){
+    var col = colorOf(r.p);
+    h+='<tr><th class="rh"><span class="sw" style="background:'+col+'"></span>'+esc(r.p)+'</th>';
+    perYear(r.p).forEach(function(c){
+      if(!c.f){ h+='<td class="z">·</td>'; }
+      else{
+        var full = c.w===c.f && c.w>0;
+        h+='<td class="pf"'+(full?' style="background:'+col+';color:'+inkOn(col)+'"':'')+'>'+c.w+'/'+c.f+'</td>';
+      }
+    });
+    h+='</tr>';
+  });
+  h+='</tbody></table>';
+  document.getElementById("stripHost").innerHTML = h;
+}
+
+/* ============================================================
+   RENDER — data tab
+   ============================================================ */
+function renderData(){
+  document.getElementById("chgList").innerHTML  = CHANGES.map(function(c){ return '<li>'+c+'</li>'; }).join("");
+  document.getElementById("noteList").innerHTML = NOTES.map(function(n){ return '<li>'+esc(n)+'</li>'; }).join("");
+}
+
+/* ============================================================
+   EDIT
+   ============================================================ */
+var cur = null;
+function openEdit(s,y){
+  if(!editing) return;
+  cur = {s:s,y:y};
+  var f = data[s][y] || {};
+  document.getElementById("edT").textContent = y + " " + s;
+  document.getElementById("edS").textContent = "Champion beat runner-up";
+  document.getElementById("edC").value  = f.c || "";
+  document.getElementById("edR").value  = f.r || "";
+  document.getElementById("edSc").value = f.sc || "";
+  document.getElementById("edX").checked = !!f.x;
+  var dl = document.getElementById("plList");
+  dl.innerHTML = allPlayers().map(function(p){ return '<option value="'+esc(p)+'">'; }).join("");
+  document.getElementById("ed").showModal();
+}
+function commitEdit(action){
+  if(!cur) return;
+  if(action==="cancel" || !action){ cur=null; return; }   // !action = closed with Esc
+  if(action==="clear"){ delete data[cur.s][cur.y]; }
+  else if(document.getElementById("edX").checked){ data[cur.s][cur.y] = {x:true}; }
+  else{
+    var c = document.getElementById("edC").value.trim();
+    var r = document.getElementById("edR").value.trim();
+    var sc= document.getElementById("edSc").value.trim();
+    if(!c){ delete data[cur.s][cur.y]; }
+    else{ data[cur.s][cur.y] = {c:c, r:r, sc:sc}; }
+  }
+  cur=null; save(); renderAll();
+}
+
+/* ============================================================
+   WIRING
+   ============================================================ */
+function renderAll(){
+  document.getElementById("rangeLbl").textContent = START + "–" + endYear;
+  renderKPIs(); renderMatrix(); renderYears(); renderBoard(); renderStrip();
+  var sel = document.getElementById("hl"), prev = highlight;
+  sel.innerHTML = '<option value="">Everyone</option>' + tally()
+    .sort(function(a,b){ return b.f-a.f || (a.p<b.p?-1:1); })
+    .map(function(r){ return '<option value="'+esc(r.p)+'">'+esc(r.p)+' ('+r.w+')</option>'; }).join("");
+  sel.value = prev;
+  highlight = sel.value;   // player may have been edited away
+}
+function go(v){
+  ["grid","board","data"].forEach(function(k){
+    document.getElementById("v-"+k).hidden = (k!==v);
+  });
+  var bs = document.querySelectorAll("nav.tabs button");
+  for(var i=0;i<bs.length;i++) bs[i].setAttribute("aria-selected", String(bs[i].getAttribute("data-v")===v));
+  window.scrollTo(0,0);
+}
+
+document.addEventListener("DOMContentLoaded", function(){
+  load();
+  initLayout();
+  renderData();
+  renderAll();
+
+  document.getElementById("tglLayout").addEventListener("click", cycleLayout);
+
+  var bs = document.querySelectorAll("nav.tabs button");
+  for(var i=0;i<bs.length;i++){
+    bs[i].addEventListener("click", function(){ go(this.getAttribute("data-v")); });
+  }
+
+  document.getElementById("hl").addEventListener("change", function(){
+    highlight = this.value; renderMatrix(); renderYears();
+  });
+  document.getElementById("minF").addEventListener("change", renderBoard);
+
+  document.getElementById("tglScore").addEventListener("click", function(){
+    showScores = !showScores; this.classList.toggle("on", showScores);
+    renderMatrix(); renderYears();
+  });
+  document.getElementById("tglEdit").addEventListener("click", function(){
+    editing = !editing; this.classList.toggle("on", editing);
+    document.body.classList.toggle("editing", editing);
+    document.getElementById("editHint").hidden = !editing;
+    document.getElementById("addYear").hidden  = !editing;
+  });
+  document.getElementById("addYear").addEventListener("click", function(){
+    endYear++; save(); renderAll();
+  });
+
+  // delegate cell taps
+  document.addEventListener("click", function(e){
+    if(!editing) return;
+    var t = e.target.closest ? e.target.closest("td.cell, .yearcard .val") : null;
+    if(!t) return;
+    var s = t.getAttribute("data-s"), y = t.getAttribute("data-y");
+    if(s && y) openEdit(s, +y);
+  });
+
+  document.getElementById("ed").addEventListener("close", function(){
+    commitEdit(this.returnValue);
+  });
+
+  // export / import / reset
+  document.getElementById("doExport").addEventListener("click", function(){
+    document.getElementById("io").value = JSON.stringify({v:1, endYear:endYear, data:data});
+    document.getElementById("ioMsg").textContent = "Copy everything in the box, then paste it on your other device and tap “Load pasted data”.";
+  });
+  document.getElementById("doImport").addEventListener("click", function(){
+    var msg = document.getElementById("ioMsg");
+    try{
+      var o = JSON.parse(document.getElementById("io").value);
+      if(!o || !o.data) throw new Error("no data field");
+      SLAMS.forEach(function(s){ if(!o.data[s]) throw new Error("missing "+s); });
+      data = o.data; endYear = o.endYear || lastYear(data);
+      save(); renderAll();
+      msg.textContent = "Loaded. Range is now " + START + "–" + endYear + ".";
+    }catch(err){
+      msg.textContent = "Couldn't read that — it doesn't look like tracker data. (" + err.message + ")";
+      console.warn("import failed", err);
+    }
+  });
+  document.getElementById("doReset").addEventListener("click", function(){
+    if(!window.confirm("Discard your edits and go back to the verified 2003–2026 data?")) return;
+    data = buildSeed(); endYear = lastYear(data); save(); renderAll();
+    document.getElementById("ioMsg").textContent = "Reset to the verified data.";
+  });
+
+  console.log("slam tracker ready:", years().length, "years,", tally().length,
+              "players, layout:", layoutMode, "->", effectiveLayout());
+});
+
+/* Offline support. Only registers over http/https (so opening the file
+   directly with file:// still works, it just won't cache). */
+if("serviceWorker" in navigator && location.protocol.indexOf("http") === 0){
+  window.addEventListener("load", function(){
+    navigator.serviceWorker.register("sw.js").then(function(r){
+      console.log("offline ready, scope:", r.scope);
+    }).catch(function(e){
+      console.warn("service worker not registered:", e.message);
+    });
+  });
+}
+</script>
+</body>
+</html>
